@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tourism Packages</title>
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+<div class="container">
+    <button class="logout-btn" onclick="logout()">Logout</button>
+    <h2>Tourism Packages</h2>
+
+    <div id="packageList" class="packages-container">
+        <!-- Packages will be loaded here dynamically -->
+    </div>
+
+    <div id="adminSection" style="display: none;">
+        <button class="add-package-btn" onclick="window.location.href='addPackage.html'">Add New Package</button>
+    </div>
+
+    <p id="errorMessage" class="error" style="display: none;">Error loading packages.</p>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let userRole = localStorage.getItem("userRole");
+        if (!userRole) {
+            window.location.href = "index.html";
+        }
+
+        if (userRole === "admin") {
+            document.getElementById("adminSection").style.display = "block";
+        }
+
+        function loadPackages() {
+            fetch("packages.txt")
+                .then(response => response.text())
+                .then(data => {
+                    let packageContainer = document.getElementById("packageList");
+                    packageContainer.innerHTML = "";
+
+                    let packages = data.split("\n").filter(pkg => pkg.trim() !== "");
+                    if (packages.length === 0) {
+                        packageContainer.innerHTML = "<p>No packages available.</p>";
+                    } else {
+                        packages.forEach(line => {
+                            let packageData = line.split(",");
+                            if (packageData.length >= 4) {
+                                let [id, name, price, duration] = packageData.map(item => item.trim());
+
+                                let packageCard = document.createElement("div");
+                                packageCard.classList.add("package-card");
+                                packageCard.innerHTML = `
+                                <div class="package-header">
+                                    <span>Package #${id}</span>
+                                    <span class="price">${price}</span>
+                                </div>
+                                <div class="package-info">
+                                    <h3>${name}</h3>
+                                    <p>📆 ${duration}</p>
+                                    <button class="details-btn">Details</button>
+                                    <button class="book-btn">Book Now</button>
+                                </div>
+                            `;
+                                packageContainer.appendChild(packageCard);
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    document.getElementById("errorMessage").style.display = "block";
+                    document.getElementById("errorMessage").textContent = "Error loading packages.";
+                });
+        }
+
+        function logout() {
+            console.log("Logging out..."); // Debugging log
+            localStorage.removeItem("userRole");
+            window.location.href = "index.html"; // Redirect to login page
+        }
+
+
+        loadPackages(); // Load packages when the page loads
+    });
+
+
+</script>
+
+</body>
+</html>
